@@ -34,7 +34,7 @@ app.use(
   cors({
     // origin: ["http://localhost:8000", "http://localhost:5174","http://localhost:5173","http://localhost:3000","https://uat.jobtiondevs.com","https://jobtion-web.vercel.app","https://jobtion-azuf9lgx7-nanamanuel007s-projects.vercel.app/"],
     origin: "*",
-    credentials: true,
+    // credentials: true,
   })
 );
 
