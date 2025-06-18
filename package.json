@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "",
-    "start": "node server.js",
+    "start": "bun server.js",
     "dev": "nodemon server.js"
   },
   "keywords": [
