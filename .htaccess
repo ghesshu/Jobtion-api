@@ -1,0 +1,27 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home2/jobtiond/public_html/node.jobtiondevs.com"
+PassengerBaseURI "/"
+PassengerNodejs "/home2/jobtiond/nodevenv/public_html/node.jobtiondevs.com/20/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+SetEnv ACCESS_TOKEN_EXPIRY 86400
+SetEnv ACCESS_TOKEN_SECRET this@jobtion@APi#
+SetEnv DB_HOST localhost
+SetEnv DB_NAME jobtiond_db
+SetEnv DB_PASSWORD p4H79!.ToKy4
+SetEnv DB_USER jobtiond_root
+SetEnv EMAIL_HOST mail.jobtiondevs.com
+SetEnv EMAIL_PORT 465
+SetEnv REF_TOKEN_EXPIRY 86400
+SetEnv REF_TOKEN_SECRET letrefresh3@this@jobtion@APi#
+SetEnv SENDER_ID Jobtion
+SetEnv SMS_API_KEY rFJMBLKJM8LViBVE5ofbklzVYLSkdo4F3OsFzdollahEM
+SetEnv SMS_URL https://api.mnotify.com/api/sms/quick
+SetEnv EMAIL_USERNAME info@jobtiondevs.com
+SetEnv EMAIL_PASSWORD u78rGn3f#3YPY]
+SetEnv EMAIL_SERVERNAME jobtiondevs.com
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
