@@ -1,29 +1,107 @@
 const Joi = require('joi')
 const multer = require('multer')
-const fs = require('fs-extra')
+const { Client } = require('minio')
+const path = require('path')
 
-// multer disk storage configuration
-const storage = multer.diskStorage({
-  // this function determines the folder name
-  destination: function (req, file, cb) {
-    console.log('...building destination folder')
-    // create directory for user using name in request body
-    fs.ensureDir(`./storage/uploads/${req.email}`, err => {
+// MinIO client configuration
+const minioClient = new Client({
+  endPoint: process.env.MINIO_ENDPOINT || "localhost",
+  port: parseInt(process.env.MINIO_PORT) || 443,
+  useSSL: process.env.MINIO_USE_SSL === "true" || false,
+  accessKey: process.env.MINIO_ACCESS_KEY || "minioadmin",
+  secretKey: process.env.MINIO_SECRET_KEY || "minioadmin",
+})
+
+const bucketName = process.env.MINIO_BUCKET_NAME || "jobtion"
+
+// Ensure bucket exists
+minioClient.bucketExists(bucketName, (err, exists) => {
+  if (err) {
+    console.log("Error checking bucket:", err)
+  } else if (!exists) {
+    minioClient.makeBucket(bucketName, "us-east-1", (err) => {
       if (err) {
-        console.log('create directory error', err)
-        cb(null, null)
+        console.log("Error creating bucket:", err)
       } else {
-        cb(null, `./storage/uploads/${req.email}`)
+        console.log("Bucket created successfully")
       }
     })
-  },
-  // this function determines the file name
-filename: function (req, file, cb) {
-    console.log("...building file name");
-    // cb(null, file.originalname);
-    const fileExtension = file.originalname.split('.').pop(); // Extract file extension
-    const customName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
-    cb(null, customName);
+  }
+})
+
+// Custom storage engine for MinIO
+class MinIOStorage {
+  constructor(opts) {
+    this.getBucketName = opts.bucketName || (() => bucketName)
+    this.getKey = opts.key || this._defaultKey
+  }
+
+  _defaultKey(req, file, cb) {
+    const fileExtension = file.originalname.split('.').pop()
+    const customName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 10)}.${fileExtension}`
+    cb(null, `${req.email}/${customName}`)
+  }
+
+  _handleFile(req, file, cb) {
+    this.getKey(req, file, (err, key) => {
+      if (err) return cb(err)
+
+      const chunks = []
+      file.stream.on('data', (chunk) => chunks.push(chunk))
+      file.stream.on('end', () => {
+        const buffer = Buffer.concat(chunks)
+
+        minioClient.putObject(
+          bucketName,
+          key,
+          buffer,
+          buffer.length,
+          {
+            'Content-Type': file.mimetype,
+            'Original-Name': file.originalname,
+          },
+          (err, etag) => {
+            if (err) {
+              console.log('MinIO upload error:', err)
+              return cb(err)
+            }
+
+            console.log('File uploaded successfully to MinIO')
+            cb(null, {
+              bucket: bucketName,
+              key: key,
+              size: buffer.length,
+              etag: etag,
+              // Maintain compatibility with existing code expectations
+              filename: path.basename(key),
+              path: key,
+              destination: `minio://${bucketName}/${req.email}`,
+            })
+          }
+        )
+      })
+
+      file.stream.on('error', cb)
+    })
+  }
+
+  _removeFile(req, file, cb) {
+    minioClient.removeObject(bucketName, file.key, cb)
+  }
+}
+
+// multer storage configuration using custom MinIO storage
+const storage = new MinIOStorage({
+  bucketName: bucketName,
+  key: function (req, file, cb) {
+    console.log('...building file name for MinIO')
+    const fileExtension = file.originalname.split('.').pop()
+    const customName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 10)}.${fileExtension}`
+    cb(null, `${req.email}/${customName}`)
   },
 })
 

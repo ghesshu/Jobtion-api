@@ -35,14 +35,13 @@ const SMS = async (contacts, message) => {
     response.code === "2000"
       ? {
           status: 1000,
-          to:contacts,
+          to: contacts,
           message: response.message,
         }
       : {
-          to:contacts,
+          to: contacts,
           message: response.message,
         };
-
 
   logger("sms").info("SMS Response : ", transFormData);
 
@@ -59,40 +58,32 @@ const Email = async (to, message) => {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD,
       },
-    //   tls: {
-    //     // must provide server name, otherwise TLS certificate check will fail
-    //     servername: process.env.EMAIL_SERVERNAME,
-    //     rejectUnauthorized: true,
-    //     minVersion: "TLSv1.2",
-    //   },
     });
-    
-  
+
     let info = await transporter.sendMail({
-    //   from: process.env.EMAIL_USERNAME, // sender address
-      from: "no-reply@jobtiondevs.com",
+      //   from: process.env.EMAIL_USERNAME, // sender address
+      from: process.env.EMAIL_USERNAME,
       to: to, // list of receivers
       subject: "Jobtion", // Subject line
       text: message, // plain text body
       html: `${message}`, // html body
     });
-  
+
     const transformSentResponse = {
       accepted: info.accepted,
       rejected: info.rejected,
       messageId: info.messageId,
     };
-  
-    
+
     logger("email").info("Email Response : ", transformSentResponse);
 
     return true;
   } catch (error) {
-    const mainError = error.rejectedErrors[0].response;
-    logger("email").error("Email Response : ", {mainError});
+    const mainError =
+      error.rejectedErrors?.[0]?.response || error.message || error;
+    logger("email").error("Email Response : ", { mainError });
     return false;
   }
-  
 };
 
 const ApplicationEmail = async (to, message, title) => {
@@ -112,8 +103,7 @@ const ApplicationEmail = async (to, message, title) => {
         minVersion: "TLSv1.2",
       },
     });
-    
-  
+
     let info = await transporter.sendMail({
       from: "no-reply@jobtiondevs.com", // sender address
       to: to, // list of receivers
@@ -121,23 +111,22 @@ const ApplicationEmail = async (to, message, title) => {
       text: message, // plain text body
       html: `${message}`, // html body
     });
-  
+
     const transformSentResponse = {
       accepted: info.accepted,
       rejected: info.rejected,
       messageId: info.messageId,
     };
-  
-    
-    logger("email").info("Email Response : ", transformSentResponse);
 
+    logger("email").info("Email Response : ", transformSentResponse);
     return true;
   } catch (error) {
-    const mainError = error.rejectedErrors[0].response;
-    logger("email").error("Email Response : ", {mainError});
+    // Fix: Use optional chaining to prevent TypeError
+    const mainError =
+      error.rejectedErrors?.[0]?.response || error.message || error;
+    logger("email").error("Email Response : ", { mainError });
     return false;
   }
-  
 };
 
 module.exports = { SMS, Email, ApplicationEmail };
