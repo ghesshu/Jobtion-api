@@ -96,16 +96,10 @@ const ApplicationEmail = async (to, message, title) => {
         user: process.env.EMAIL_USERNAME,
         pass: process.env.EMAIL_PASSWORD,
       },
-      tls: {
-        // must provide server name, otherwise TLS certificate check will fail
-        servername: process.env.EMAIL_SERVERNAME,
-        rejectUnauthorized: true,
-        minVersion: "TLSv1.2",
-      },
     });
 
     let info = await transporter.sendMail({
-      from: "no-reply@jobtiondevs.com", // sender address
+      from: process.env.EMAIL_USERNAME, // sender address
       to: to, // list of receivers
       subject: "Confirmation of Application for " + title, // Subject line
       text: message, // plain text body
