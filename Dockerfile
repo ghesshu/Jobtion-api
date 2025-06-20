@@ -1,17 +1,20 @@
-# Use the official Bun image
-FROM oven/bun:alpine
+# Use the official Node.js image
+FROM node:alpine
 
-# Set the working directory to the root (default is already /)
-WORKDIR /
+# Set the working directory
+WORKDIR /app
 
-# Copy everything into the container
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application
 COPY . .
-
-# Install dependencies if needed (optional)
-RUN if [ -f bun.lockb ]; then bun install; fi
 
 # Expose the default port (optional, e.g., 3000)
 EXPOSE 3000
 
 # Run the server
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]
